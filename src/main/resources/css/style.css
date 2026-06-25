@@ -1,0 +1,293 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom right, #080922, #120b3a, #06071d);
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.app-panel {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-padding: 45;
+}
+
+.title {
+    -fx-font-size: 42px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.subtitle {
+    -fx-font-size: 17px;
+    -fx-text-fill: #b9b5df;
+}
+
+.menu-button {
+    -fx-pref-width: 280px;
+    -fx-pref-height: 80px;
+    -fx-background-radius: 12;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+
+.btn-blue {
+    -fx-background-color: linear-gradient(to right, #1388ff, #2352ff);
+}
+
+.btn-purple {
+    -fx-background-color: linear-gradient(to right, #6b37ff, #8d20e8);
+}
+
+.btn-pink {
+    -fx-background-color: linear-gradient(to right, #d92a8a, #e83f98);
+}
+
+.info-card {
+    -fx-border-color: #2b285f;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-padding: 22;
+}
+
+.info-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #b9b5df;
+}
+
+.info-value {
+    -fx-font-size: 18px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.top-back {
+    -fx-font-size: 28px;
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.page-title {
+    -fx-font-size: 34px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.content-card {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-border-color: #2d2860;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 25;
+}
+
+.step-circle {
+    -fx-background-color: linear-gradient(to bottom right, #7b3cff, #4a23c9);
+    -fx-background-radius: 50;
+    -fx-min-width: 42px;
+    -fx-min-height: 42px;
+    -fx-max-width: 42px;
+    -fx-max-height: 42px;
+    -fx-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.step-text {
+    -fx-font-size: 16px;
+    -fx-text-fill: white;
+}
+
+.step-row {
+    -fx-padding: 8 0 8 0;
+}
+
+.divider {
+    -fx-background-color: #292452;
+    -fx-pref-height: 1;
+}
+
+.card-icon-purple {
+    -fx-font-size: 42px;
+    -fx-text-fill: #9b63ff;
+}
+
+.card-icon-yellow {
+    -fx-font-size: 42px;
+    -fx-text-fill: #ffc533;
+}
+
+.menu-button-icon {
+    -fx-font-size: 40px;
+    -fx-text-fill: white;
+}
+
+.menu-button-text {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.server-card {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-border-color: #2d2860;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 45;
+}
+
+.server-input {
+    -fx-pref-width: 360px;
+    -fx-pref-height: 45px;
+    -fx-background-color: transparent;
+    -fx-border-color: #2d2860;
+    -fx-border-width: 0 0 1.5 0;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #827ca9;
+    -fx-font-size: 16px;
+}
+
+.turn-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-border-color: #2d2860;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 12 24 12 24;
+}
+
+.game-root {
+    -fx-background-color: linear-gradient(to bottom right, #080922, #120b3a, #06071d);
+}
+
+.board-card {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-border-color: #2d2860;
+    -fx-border-width: 2;
+    -fx-border-radius: 22;
+    -fx-background-radius: 22;
+    -fx-padding: 35;
+}
+
+.house-button {
+    -fx-pref-width: 88px;
+    -fx-pref-height: 88px;
+    -fx-background-radius: 50;
+    -fx-background-color: #151733;
+    -fx-border-color: #5d4cff;
+    -fx-border-width: 2;
+    -fx-border-radius: 50;
+    -fx-text-fill: white;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.house-button:hover {
+    -fx-background-color: #232656;
+}
+
+.store-box-blue {
+    -fx-pref-width: 80px;
+    -fx-pref-height: 330px;
+    -fx-background-color: transparent;
+    -fx-border-color: #2d8cff;
+    -fx-border-width: 3;
+    -fx-border-radius: 45;
+    -fx-background-radius: 45;
+    -fx-alignment: center;
+}
+
+.store-box-pink {
+    -fx-pref-width: 80px;
+    -fx-pref-height: 330px;
+    -fx-background-color: transparent;
+    -fx-border-color: #e83f98;
+    -fx-border-width: 3;
+    -fx-border-radius: 45;
+    -fx-background-radius: 45;
+    -fx-alignment: center;
+}
+
+.store-title {
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+}
+
+.store-value {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.game-button {
+    -fx-pref-width: 180px;
+    -fx-pref-height: 45px;
+    -fx-background-radius: 12;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+    -fx-cursor: hand;
+}
+
+.players-bar {
+    -fx-padding: 10 55 0 55;
+}
+
+.player-name-blue {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.player-name-pink {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.player-score-blue {
+    -fx-font-size: 16px;
+    -fx-text-fill: #2d8cff;
+}
+
+.player-score-pink {
+    -fx-font-size: 16px;
+    -fx-text-fill: #e83f98;
+}
+
+.danger-button {
+    -fx-pref-width: 210px;
+    -fx-pref-height: 52px;
+    -fx-background-color: transparent;
+    -fx-border-color: #ff315c;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.secondary-button {
+    -fx-pref-width: 190px;
+    -fx-pref-height: 52px;
+    -fx-background-color: transparent;
+    -fx-border-color: #6b37ff;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}

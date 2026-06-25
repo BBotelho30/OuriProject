@@ -6,4 +6,5 @@ public interface NetworkConnection {
     void start();
     void send(String message);
     void setOnMessage(Consumer<String> onMessage);
+    void close();
 }
