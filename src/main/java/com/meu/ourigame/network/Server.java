@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Implementa o servidor de rede usado em partidas Ouri.
+ */
 public class Server implements NetworkConnection {
     private ServerSocket serverSocket;
     private Socket socket;
@@ -15,6 +18,9 @@ public class Server implements NetworkConnection {
 
     private final List<String> mensagensPendentes = new ArrayList<>();
 
+    /**
+     * Inicia o servidor e aguarda a ligação de um cliente.
+     */
     @Override
     public void start() {
         new Thread(() -> {
@@ -56,6 +62,11 @@ public class Server implements NetworkConnection {
     }
 
     @Override
+    /**
+     * Envia uma mensagem para o cliente conectado.
+     *
+     * @param message texto a enviar.
+     */
     public void send(String message) {
         if (out != null) {
             out.println(message);
@@ -67,11 +78,17 @@ public class Server implements NetworkConnection {
     }
 
     @Override
+    /**
+     * Regista um callback para processar mensagens recebidas do cliente.
+     */
     public void setOnMessage(Consumer<String> onMessage) {
         this.onMessage = onMessage;
     }
 
     @Override
+    /**
+     * Fecha a ligação e encerra o servidor.
+     */
     public void close() {
         try {
             if (socket != null) socket.close();

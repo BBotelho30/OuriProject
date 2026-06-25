@@ -1,3 +1,8 @@
+/**
+ * Representa o estado geral do jogo Ouri.
+ *
+ * Esta classe contém a lógica de alternância de turnos e delega as jogadas para a classe {@link com.meu.ourigame.model.Jogada}.
+ */
 package com.meu.ourigame.model;
 
 public class JogoOuri {
@@ -11,15 +16,15 @@ public class JogoOuri {
         this.jogadorAtual = 0;
     }
 
-    public boolean jogar(int casaEscolhida) {
+    public ResultadoJogada jogar(int casaEscolhida) {
         Jogada jogada = new Jogada(jogadorAtual, casaEscolhida);
-        boolean jogadaValida = jogada.aplicar(tabuleiro, score);
+        ResultadoJogada resultado = jogada.aplicar(tabuleiro, score);
 
-        if (jogadaValida) {
+        if (resultado.isValida()) {
             trocarJogador();
         }
 
-        return jogadaValida;
+        return resultado;
     }
 
     private void trocarJogador() {
@@ -36,6 +41,19 @@ public class JogoOuri {
             return "Jogador 2 venceu!";
         } else {
             return "Empate!";
+        }
+    }
+
+    public int getIndiceVencedor() {
+        int pontosJ1 = tabuleiro.getDeposito(0);
+        int pontosJ2 = tabuleiro.getDeposito(1);
+
+        if (pontosJ1 > pontosJ2) {
+            return 0;
+        } else if (pontosJ2 > pontosJ1) {
+            return 1;
+        } else {
+            return -1;
         }
     }
 

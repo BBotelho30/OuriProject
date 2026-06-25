@@ -32,6 +32,15 @@
                     <mainClass>com.meu.ourigame.Main</mainClass>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <additionalOptions>-Xdoclint:none -private</additionalOptions>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

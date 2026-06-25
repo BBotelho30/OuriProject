@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Implementa o cliente de rede para conectar a um servidor Ouri.
+ */
 public class Client implements NetworkConnection {
     private final String ip;
     private Socket socket;

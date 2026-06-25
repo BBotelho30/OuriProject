@@ -291,3 +291,156 @@
     -fx-font-weight: bold;
     -fx-cursor: hand;
 }
+
+.feedback-label {
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-padding: 12 22 12 22;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-width: 1.5;
+    -fx-alignment: center;
+}
+
+.feedback-info {
+    -fx-background-color: rgba(255, 255, 255, 0.07);
+    -fx-border-color: rgba(150, 120, 255, 0.55);
+}
+
+.feedback-erro {
+    -fx-background-color: rgba(255, 80, 120, 0.12);
+    -fx-border-color: rgba(255, 80, 120, 0.75);
+    -fx-text-fill: #ffd6df;
+}
+
+.feedback-sucesso {
+    -fx-background-color: rgba(80, 220, 150, 0.12);
+    -fx-border-color: rgba(80, 220, 150, 0.75);
+    -fx-text-fill: #d8ffe9;
+}
+
+.end-root {
+    -fx-background-color: linear-gradient(to bottom right, #05051d, #110734, #08051c);
+}
+
+.end-content {
+    -fx-spacing: 24;
+}
+
+.end-title {
+    -fx-text-fill: white;
+    -fx-font-size: 46px;
+    -fx-font-weight: 900;
+}
+
+.end-subtitle {
+    -fx-text-fill: #ff4cac;
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+}
+
+.end-card {
+    -fx-pref-width: 260px;
+    -fx-pref-height: 285px;
+    -fx-padding: 24;
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-width: 2;
+}
+
+.end-card-blue {
+    -fx-border-color: #2d8cff;
+}
+
+.end-card-pink {
+    -fx-border-color: #e83f98;
+}
+
+.end-player-name {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+}
+
+.end-divider {
+    -fx-background-color: rgba(160, 130, 255, 0.35);
+    -fx-max-width: 200px;
+}
+
+.end-capturadas {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #8dbbff;
+}
+
+.end-number {
+    -fx-text-fill: white;
+    -fx-font-size: 52px;
+    -fx-font-weight: 900;
+}
+
+.end-seeds {
+    -fx-font-size: 26px;
+    -fx-text-fill: #fff6dc;
+    -fx-text-alignment: center;
+}
+
+.end-vs {
+    -fx-text-fill: rgba(255, 255, 255, 0.45);
+    -fx-font-size: 34px;
+    -fx-font-weight: 900;
+}
+
+.end-button-purple {
+    -fx-background-color: linear-gradient(to right, #5528ff, #7f35ff);
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-padding: 18 45 18 45;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.end-button-pink {
+    -fx-background-color: linear-gradient(to right, #e83f98, #d92d77);
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-padding: 18 45 18 45;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.house-button {
+    -fx-pref-width: 88px;
+    -fx-pref-height: 88px;
+    -fx-background-radius: 44;
+    -fx-border-radius: 44;
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+
+.house-button-blue {
+    -fx-border-color: #2d8cff;
+    -fx-border-width: 2.2;
+    -fx-background-color: rgba(45, 140, 255, 0.08);
+}
+
+.house-button-pink {
+    -fx-border-color: #e83f98;
+    -fx-border-width: 2.2;
+    -fx-background-color: rgba(232, 63, 152, 0.08);
+}
+
+.house-button-blue:hover {
+    -fx-background-color: rgba(45, 140, 255, 0.18);
+}
+
+.house-button-pink:hover {
+    -fx-background-color: rgba(232, 63, 152, 0.18);
+}

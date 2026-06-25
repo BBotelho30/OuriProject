@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -16,17 +17,26 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-
 import javafx.scene.layout.Region;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import com.meu.ourigame.model.ResultadoJogada;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
+/**
+ * Interface gráfica do jogo Ouri.
+ *
+ * Esta classe controla a navegação entre menu, jogo, regras e o modo de rede.
+ */
 public class OuriGameUI extends Application {
 
+    // Referência principal para a janela do jogo
     private Stage stage;
 
+    // Estado principal do jogo e componentes de UI que precisam ser atualizados dinamicamente
     private JogoOuri jogo;
     private Button[][] botoesCasas;
     private Label lblJogadorAtual;
@@ -34,10 +44,13 @@ public class OuriGameUI extends Application {
     private Label lblDepositoJ2;
     private Label lblEstadoRede;
 
+    // Comunicação em rede: servidor ou cliente
     private NetworkConnection connection;
     private boolean modoRede = false;
-    private int jogadorLocal = -1;
+    private int jogadorLocal = -1; // 0 = servidor/jogador 1, 1 = cliente/jogador 2
+    private int jogadorInicialProximoJogo = 0;
 
+    // Nomes exibidos para cada jogador
     private String nomeJogador1 = "Jogador 1";
     private String nomeJogador2 = "Jogador 2";
 
@@ -47,14 +60,24 @@ public class OuriGameUI extends Application {
     private Label lblNomeJ1;
     private Label lblNomeJ2;
 
+    private Label lblFeedback;
+
+    /**
+     * Ponto de entrada da interface JavaFX.
+     *
+     * @param stage janela principal fornecida pela plataforma.
+     */
     @Override
     public void start(Stage stage) {
         this.stage = stage;
+        // A primeira tela exibida é o menu principal do jogo
         mostrarMenuInicial();
     }
 
+    /**
+     * Exibe o menu inicial com as opções de iniciar jogo, ver regras e como jogar.
+     */
     private void mostrarMenuInicial() {
-
         Label titulo = new Label("Jogo Ouri");
         titulo.getStyleClass().add("title");
 
@@ -99,6 +122,9 @@ public class OuriGameUI extends Application {
         stage.show();
     }
 
+    /**
+     * Inicia um jogo local no mesmo computador, sem rede.
+     */
     private void iniciarJogoLocal() {
         modoRede = false;
         jogadorLocal = -1;
@@ -107,6 +133,7 @@ public class OuriGameUI extends Application {
     }
 
     private void iniciarServidor() {
+        // Inicia modo rede como servidor (jogador 1)
         modoRede = true;
         jogadorLocal = 0;
 
@@ -126,6 +153,7 @@ public class OuriGameUI extends Application {
     }
 
     private void iniciarCliente(String ipServidor) {
+        // Inicia modo rede como cliente (jogador 2)
         modoRede = true;
         jogadorLocal = 1;
 
@@ -145,6 +173,7 @@ public class OuriGameUI extends Application {
     }
 
     private void mostrarJogo() {
+        // Inicializa o estado do jogo e configura a interface do tabuleiro
         jogo = new JogoOuri();
         botoesCasas = new Button[2][Tabuleiro.NUM_CASAS];
 
@@ -164,11 +193,11 @@ public class OuriGameUI extends Application {
         topo.setPadding(new Insets(20, 0, 25, 0));
 
         root.setTop(topo);
-
         root.setCenter(criarTabuleiro());
         root.setBottom(criarRodape());
 
         atualizarInterface();
+        atualizarFeedbackPadrao();
 
         Scene scene = new Scene(root, 1000, 650);
         aplicarCss(scene);
@@ -213,13 +242,22 @@ public class OuriGameUI extends Application {
     }
 
     private Button criarBotaoCasa(int jogador, int casa) {
+        // Cada casa do tabuleiro é um botão clicável que dispara a jogada
         Button btn = new Button();
         btn.getStyleClass().add("house-button");
+
+        if (jogador == 0) {
+            btn.getStyleClass().add("house-button-blue");
+        } else {
+            btn.getStyleClass().add("house-button-pink");
+        }
+
         btn.setOnAction(e -> jogarCasa(jogador, casa));
         return btn;
     }
 
     private BorderPane criarRodape() {
+        // Rodapé contém controles de reinício, menu e o feedback de jogada
         Button btnNovoJogo = new Button("✕  Desistir / Novo Jogo");
         btnNovoJogo.getStyleClass().add("danger-button");
 
@@ -227,11 +265,10 @@ public class OuriGameUI extends Application {
         btnMenu.getStyleClass().add("secondary-button");
 
         btnNovoJogo.setOnAction(e -> {
-            jogo = new JogoOuri();
-            atualizarInterface();
+            iniciarNovoJogo();
 
             if (modoRede && connection != null) {
-                connection.send("NOVO");
+                connection.send("NOVO:" + jogadorInicialProximoJogo);
             }
         });
 
@@ -244,41 +281,58 @@ public class OuriGameUI extends Application {
             mostrarMenuInicial();
         });
 
+        // Status de conexão exibido abaixo das mensagens do jogador
         lblEstadoRede.setAlignment(Pos.CENTER);
+
+        lblFeedback = new Label("Seleciona uma das tuas cavidades para jogar.");
+        lblFeedback.getStyleClass().addAll("feedback-label", "feedback-info");
+        lblFeedback.setWrapText(true);
+        lblFeedback.setMaxWidth(520);
+        lblFeedback.setAlignment(Pos.CENTER);
+
+        VBox centroRodape = new VBox(10, lblFeedback, lblEstadoRede);
+        centroRodape.setAlignment(Pos.CENTER);
+        centroRodape.setPadding(new Insets(0, 25, 0, 25));
 
         BorderPane rodape = new BorderPane();
         rodape.setLeft(btnNovoJogo);
-        rodape.setCenter(lblEstadoRede);
+        rodape.setCenter(centroRodape);
         rodape.setRight(btnMenu);
         rodape.setPadding(new Insets(20, 45, 10, 45));
+
+        BorderPane.setMargin(btnNovoJogo, new Insets(0, 20, 0, 0));
+        BorderPane.setMargin(btnMenu, new Insets(0, 0, 0, 20));
 
         return rodape;
     }
 
     private void jogarCasa(int jogador, int casa) {
+        // Verifica se a jogada é válida no modo rede e no fluxo de turnos
         if (modoRede && jogador != jogadorLocal) {
-            mostrarMensagem("Jogada inválida", "Só podes jogar nas tuas casas.");
+            mostrarFeedbackErro("Só podes jogar nas tuas cavidades.");
             return;
         }
 
         if (modoRede && jogo.getJogadorAtual() != jogadorLocal) {
-            mostrarMensagem("Aguarda", "Ainda não é a tua vez.");
+            mostrarFeedbackErro("Ainda não é a tua vez.");
             return;
         }
 
         if (jogador != jogo.getJogadorAtual()) {
-            mostrarMensagem("Jogada inválida", "Não é a vez desse jogador.");
+            mostrarFeedbackErro("Não é a vez desse jogador.");
             return;
         }
 
-        boolean jogadaValida = jogo.jogar(casa);
+        ResultadoJogada resultado = jogo.jogar(casa);
 
-        if (!jogadaValida) {
-            mostrarMensagem("Jogada inválida", "Escolhe uma casa com mais de 1 semente.");
+        if (!resultado.isValida()) {
+            mostrarFeedbackErro(resultado.getMensagem());
             return;
         }
 
+        // Atualiza a interface depois da jogada e notifica o adversário em rede
         atualizarInterface();
+        mostrarFeedbackSucesso("Jogada realizada com sucesso.");
 
         if (modoRede && connection != null) {
             connection.send("JOGADA:" + jogador + ":" + casa);
@@ -288,6 +342,7 @@ public class OuriGameUI extends Application {
     }
 
     private void receberMensagem(String mensagem) {
+        // Mensagens de rede são recebidas na thread de IO e precisam ser processadas na UI thread
         Platform.runLater(() -> {
 
             if (mensagem.startsWith("JOGADA:")) {
@@ -302,18 +357,23 @@ public class OuriGameUI extends Application {
                 int casaRecebida = Integer.parseInt(partes[2]);
 
                 jogo.setJogadorAtual(jogadorRecebido);
+                ResultadoJogada resultado = jogo.jogar(casaRecebida);
 
-                boolean jogadaValida = jogo.jogar(casaRecebida);
-
-                if (jogadaValida) {
+                if (resultado.isValida()) {
                     atualizarInterface();
+                    atualizarFeedbackPadrao();
                     verificarFimDeJogo();
                 }
             }
 
-            if (mensagem.equals("NOVO")) {
-                jogo = new JogoOuri();
-                atualizarInterface();
+            if (mensagem.startsWith("NOVO")) {
+                String[] partes = mensagem.split(":");
+
+                if (partes.length == 2) {
+                    jogadorInicialProximoJogo = Integer.parseInt(partes[1]);
+                }
+
+                iniciarNovoJogo();
             }
 
             if (mensagem.equals("SAIR_MENU")) {
@@ -331,7 +391,6 @@ public class OuriGameUI extends Application {
                     if (connection != null) {
                         connection.send("NOME:" + nomeJogador1);
                     }
-
                 } else {
                     nomeJogador1 = nomeRecebido;
                 }
@@ -342,12 +401,120 @@ public class OuriGameUI extends Application {
     }
 
     private void verificarFimDeJogo() {
+        // Verifica se o jogo terminou e mostra a tela de fim de jogo
         if (jogo.isFimDeJogo()) {
-            mostrarMensagem("Fim de jogo", jogo.getVencedor());
+            int vencedor = jogo.getIndiceVencedor();
+
+            if (vencedor == 0 || vencedor == 1) {
+                jogadorInicialProximoJogo = vencedor;
+            }
+
+            mostrarPaginaFimDeJogo();
         }
     }
 
+    private void mostrarPaginaFimDeJogo() {
+        // Monta a tela de fim de jogo com o total de capturas de cada jogador
+        Tabuleiro tabuleiro = jogo.getTabuleiro();
+
+        int capturasJ1 = tabuleiro.getDeposito(0);
+        int capturasJ2 = tabuleiro.getDeposito(1);
+        int vencedor = jogo.getIndiceVencedor();
+
+        String textoVencedor;
+
+        if (vencedor == 0) {
+            textoVencedor = nomeJogador1 + " venceu!";
+        } else if (vencedor == 1) {
+            textoVencedor = nomeJogador2 + " venceu!";
+        } else {
+            textoVencedor = "Empate!";
+        }
+
+        Label titulo = new Label("Fim do Jogo!");
+        titulo.getStyleClass().add("end-title");
+
+        Label subtitulo = new Label(textoVencedor);
+        subtitulo.getStyleClass().add("end-subtitle");
+
+        VBox cardJ1 = criarCardFimJogo(nomeJogador1, capturasJ1, "end-card-blue", "player-name-blue");
+        VBox cardJ2 = criarCardFimJogo(nomeJogador2, capturasJ2, "end-card-pink", "player-name-pink");
+
+        Label vs = new Label("VS");
+        vs.getStyleClass().add("end-vs");
+
+        HBox cards = new HBox(45, cardJ1, vs, cardJ2);
+        cards.setAlignment(Pos.CENTER);
+
+        Button btnJogarNovamente = new Button("▷  Jogar Novamente");
+        btnJogarNovamente.getStyleClass().add("end-button-purple");
+
+        Button btnMenu = new Button("⌂  Menu Inicial");
+        btnMenu.getStyleClass().add("end-button-pink");
+
+        btnJogarNovamente.setOnAction(e -> {
+            if (modoRede && connection != null) {
+                connection.send("NOVO:" + jogadorInicialProximoJogo);
+            }
+
+            iniciarNovoJogo();
+        });
+
+        btnMenu.setOnAction(e -> {
+            if (modoRede && connection != null) {
+                connection.send("SAIR_MENU");
+            }
+
+            fecharLigacaoRede();
+            mostrarMenuInicial();
+        });
+
+        HBox botoes = new HBox(40, btnJogarNovamente, btnMenu);
+        botoes.setAlignment(Pos.CENTER);
+
+        VBox conteudo = new VBox(22, titulo, subtitulo, cards, botoes);
+        conteudo.setAlignment(Pos.CENTER);
+        conteudo.getStyleClass().add("end-content");
+
+        StackPane root = new StackPane(conteudo);
+        root.getStyleClass().add("end-root");
+        root.setPadding(new Insets(35));
+
+        Scene scene = new Scene(root, 1000, 650);
+        aplicarCss(scene);
+
+        stage.setTitle("Ouri - Fim do Jogo");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private VBox criarCardFimJogo(String nome, int capturadas, String classeCard, String classeNome) {
+
+        Label lblNome = new Label(nome);
+        lblNome.getStyleClass().add("end-player-name");
+
+        HBox topo = new HBox(10, lblNome);
+        topo.setAlignment(Pos.CENTER);
+
+        Region divisor = new Region();
+        divisor.getStyleClass().add("end-divider");
+        divisor.setPrefHeight(1);
+
+        Label lblCapturadas = new Label("Capturadas");
+        lblCapturadas.getStyleClass().add("end-capturadas");
+
+        Label lblNumero = new Label(String.valueOf(capturadas));
+        lblNumero.getStyleClass().add("end-number");
+
+        VBox card = new VBox(18, topo, divisor, lblCapturadas, lblNumero);
+        card.getStyleClass().addAll("end-card", classeCard);
+        card.setAlignment(Pos.CENTER);
+
+        return card;
+    }
+
     private void atualizarInterface() {
+        // Atualiza todos os rótulos da interface com o estado atual do tabuleiro e do turno
         if (lblNomeJ1 != null) {
             lblNomeJ1.setText(nomeJogador1);
         }
@@ -366,35 +533,25 @@ public class OuriGameUI extends Application {
 
         lblDepositoJ1.setText("Capturadas: " + tabuleiro.getDeposito(0));
         lblDepositoJ2.setText("Capturadas: " + tabuleiro.getDeposito(1));
-        
         lblDepositoLateralJ1.setText(String.valueOf(tabuleiro.getDeposito(0)));
         lblDepositoLateralJ2.setText(String.valueOf(tabuleiro.getDeposito(1)));
-        
-        if (!modoRede) {
 
+        if (!modoRede) {
             String nomeAtual = jogo.getJogadorAtual() == 0
                     ? nomeJogador1
                     : nomeJogador2;
-
             lblJogadorAtual.setText("Vez de " + nomeAtual);
-
         } else {
-
             boolean minhaVez = jogo.getJogadorAtual() == jogadorLocal;
-
             if (minhaVez) {
-
                 lblJogadorAtual.setText("🎮 É a tua vez!");
-
             } else {
-
                 String nomeOponente = jogadorLocal == 0
                         ? nomeJogador2
                         : nomeJogador1;
-
                 lblJogadorAtual.setText("⏳ À espera da jogada de " + nomeOponente);
             }
-        };
+        }
 
         if (!modoRede) {
             lblEstadoRede.setText("Modo local");
@@ -403,6 +560,8 @@ public class OuriGameUI extends Application {
         } else {
             lblEstadoRede.setText("Modo rede: Cliente / Jogador 2");
         }
+
+        
     }
 
     private void mostrarMensagem(String titulo, String mensagem) {
@@ -411,6 +570,61 @@ public class OuriGameUI extends Application {
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
         alert.showAndWait();
+    }
+
+    private void mostrarFeedback(String mensagem) {
+        if (lblFeedback != null) {
+            lblFeedback.setText(mensagem);
+            lblFeedback.getStyleClass().removeAll("feedback-erro", "feedback-sucesso", "feedback-info");
+            lblFeedback.getStyleClass().add("feedback-info");
+        }
+    }
+
+    private void mostrarFeedbackErro(String mensagem) {
+        if (lblFeedback != null) {
+            lblFeedback.setText(mensagem);
+            lblFeedback.getStyleClass().removeAll("feedback-erro", "feedback-sucesso", "feedback-info");
+            lblFeedback.getStyleClass().add("feedback-erro");
+
+            limparFeedbackDepois(3);
+        }
+    }
+
+    private void mostrarFeedbackSucesso(String mensagem) {
+        if (lblFeedback != null) {
+            lblFeedback.setText(mensagem);
+            lblFeedback.getStyleClass().removeAll("feedback-erro", "feedback-sucesso", "feedback-info");
+            lblFeedback.getStyleClass().add("feedback-sucesso");
+
+            limparFeedbackDepois(1.5);
+        }
+    }
+
+    private void limparFeedbackDepois(double segundos) {
+        PauseTransition pausa = new PauseTransition(Duration.seconds(segundos));
+
+        pausa.setOnFinished(e -> atualizarFeedbackPadrao());
+
+        pausa.play();
+    }
+
+    private void atualizarFeedbackPadrao() {
+        if (lblFeedback == null || jogo == null) {
+            return;
+        }
+
+        if (!modoRede) {
+            String nomeAtual = jogo.getJogadorAtual() == 0 ? nomeJogador1 : nomeJogador2;
+            mostrarFeedback("Vez de " + nomeAtual + ". Seleciona uma cavidade para jogar.");
+            return;
+        }
+
+        if (jogo.getJogadorAtual() == jogadorLocal) {
+            mostrarFeedback("Seleciona uma das tuas cavidades para jogar.");
+        } else {
+            String nomeOponente = jogadorLocal == 0 ? nomeJogador2 : nomeJogador1;
+            mostrarFeedback("Aguarda pela jogada de " + nomeOponente + ".");
+        }
     }
 
     private void fecharLigacaoRede() {
@@ -455,6 +669,7 @@ public class OuriGameUI extends Application {
     }
 
     private void mostrarRegras() {
+        // Tela de regras estática que explica o funcionamento do Ouri
         Button btnVoltarTopo = new Button("← Voltar");
         btnVoltarTopo.getStyleClass().add("top-back");
         btnVoltarTopo.setOnAction(e -> mostrarMenuInicial());
@@ -511,6 +726,7 @@ public class OuriGameUI extends Application {
     }
 
     private void mostrarComoJogar() {
+        // Tela de instruções rápidas para o jogador começar a jogar
         Button btnVoltarTopo = new Button("← Voltar");
         btnVoltarTopo.getStyleClass().add("top-back");
         btnVoltarTopo.setOnAction(e -> mostrarMenuInicial());
@@ -690,6 +906,7 @@ public class OuriGameUI extends Application {
     }
 
     private VBox criarDeposito(String titulo, Label valor, String classe) {
+        // Componente de UI para exibir o depósito de sementes de cada jogador
         Label lblTitulo = new Label(titulo);
         lblTitulo.getStyleClass().add("store-title");
 
@@ -703,6 +920,7 @@ public class OuriGameUI extends Application {
     }
 
     private HBox criarBarraJogadores() {
+        // Barra superior que mostra os nomes, os depósitos e o jogador atual
         Circle corJ1 = new Circle(8);
         corJ1.setFill(Color.web("#2d8cff"));
 
@@ -750,6 +968,7 @@ public class OuriGameUI extends Application {
     }
 
     private VBox criarDepositoApenasNumero(Label valor, String classe) {
+        // Depósito lateral usado apenas para mostrar o total de sementes capturadas
         VBox box = new VBox(valor);
         box.getStyleClass().add(classe);
         box.setAlignment(Pos.CENTER);
@@ -757,6 +976,8 @@ public class OuriGameUI extends Application {
     }
     
     private void enviarQuandoPronto(String mensagem) {
+        // Envia uma mensagem pela rede após um pequeno atraso
+        // Este método não é usado atualmente, mas mantém a lógica de envio assíncrono disponível
         new Thread(() -> {
             try {
                 Thread.sleep(800);
@@ -769,6 +990,16 @@ public class OuriGameUI extends Application {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void iniciarNovoJogo() {
+        // Reinicia o jogo mantendo o jogador que começa na próxima partida
+        mostrarJogo();
+
+        jogo.setJogadorAtual(jogadorInicialProximoJogo);
+
+        atualizarInterface();
+        atualizarFeedbackPadrao();
     }
 
 }

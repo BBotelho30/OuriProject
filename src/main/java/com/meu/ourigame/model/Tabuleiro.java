@@ -1,3 +1,6 @@
+/**
+ * Representa o tabuleiro do jogo, com duas fileiras de cavidades e os depósitos de sementes.
+ */
 package com.meu.ourigame.model;
 
 public class Tabuleiro {
@@ -35,4 +38,7 @@ public class Tabuleiro {
     depositos[jogador] += valor;
   }
   
+  public void setDeposito(int jogador, int valor) {
+      depositos[jogador] = valor;
+  }
 }
