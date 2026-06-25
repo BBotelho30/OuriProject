@@ -25,6 +25,7 @@ import javafx.scene.shape.Circle;
 import com.meu.ourigame.model.ResultadoJogada;
 import javafx.animation.PauseTransition;
 import javafx.util.Duration;
+import com.meu.ourigame.persistence.SaveManager;
 
 /**
  * Interface gráfica do jogo Ouri.
@@ -257,18 +258,49 @@ public class OuriGameUI extends Application {
     }
 
     private BorderPane criarRodape() {
-        // Rodapé contém controles de reinício, menu e o feedback de jogada
-        Button btnNovoJogo = new Button("✕  Desistir / Novo Jogo");
-        btnNovoJogo.getStyleClass().add("danger-button");
+        Button btnNovoJogo = new Button("✕  Novo Jogo");
+        btnNovoJogo.getStyleClass().addAll("danger-button", "footer-button");
+
+        Button btnGuardar = new Button("💾  Guardar");
+        btnGuardar.getStyleClass().addAll("secondary-button", "footer-button");
+
+        Button btnCarregar = new Button("↺  Carregar");
+        btnCarregar.getStyleClass().addAll("secondary-button", "footer-button");
 
         Button btnMenu = new Button("⌂  Voltar ao Menu");
-        btnMenu.getStyleClass().add("secondary-button");
+        btnMenu.getStyleClass().addAll("secondary-button", "footer-button");
 
         btnNovoJogo.setOnAction(e -> {
             iniciarNovoJogo();
 
             if (modoRede && connection != null) {
                 connection.send("NOVO:" + jogadorInicialProximoJogo);
+            }
+        });
+
+        btnGuardar.setOnAction(e -> {
+            try {
+                SaveManager.guardar(jogo);
+                mostrarFeedbackSucesso("Estado do jogo guardado com sucesso.");
+            } catch (Exception ex) {
+                mostrarFeedbackErro("Erro ao guardar o jogo.");
+                ex.printStackTrace();
+            }
+        });
+
+        btnCarregar.setOnAction(e -> {
+            try {
+                SaveManager.carregar(jogo);
+                atualizarInterface();
+                atualizarFeedbackPadrao();
+
+                if (modoRede && connection != null) {
+                    connection.send("ESTADO:" + SaveManager.serializar(jogo));
+                }
+
+            } catch (Exception ex) {
+                mostrarFeedbackErro("Erro ao carregar o jogo.");
+                ex.printStackTrace();
             }
         });
 
@@ -281,27 +313,25 @@ public class OuriGameUI extends Application {
             mostrarMenuInicial();
         });
 
-        // Status de conexão exibido abaixo das mensagens do jogador
-        lblEstadoRede.setAlignment(Pos.CENTER);
-
         lblFeedback = new Label("Seleciona uma das tuas cavidades para jogar.");
         lblFeedback.getStyleClass().addAll("feedback-label", "feedback-info");
         lblFeedback.setWrapText(true);
-        lblFeedback.setMaxWidth(520);
         lblFeedback.setAlignment(Pos.CENTER);
+        lblFeedback.setMaxWidth(Double.MAX_VALUE);
 
-        VBox centroRodape = new VBox(10, lblFeedback, lblEstadoRede);
+        lblEstadoRede.setAlignment(Pos.CENTER);
+        lblEstadoRede.setMaxWidth(Double.MAX_VALUE);
+
+        HBox botoesRodape = new HBox(18, btnNovoJogo, btnGuardar, btnCarregar, btnMenu);
+        botoesRodape.setAlignment(Pos.CENTER);
+
+        VBox centroRodape = new VBox(12, botoesRodape, lblFeedback, lblEstadoRede);
         centroRodape.setAlignment(Pos.CENTER);
-        centroRodape.setPadding(new Insets(0, 25, 0, 25));
+        centroRodape.setPadding(new Insets(10, 30, 15, 30));
 
         BorderPane rodape = new BorderPane();
-        rodape.setLeft(btnNovoJogo);
         rodape.setCenter(centroRodape);
-        rodape.setRight(btnMenu);
-        rodape.setPadding(new Insets(20, 45, 10, 45));
-
-        BorderPane.setMargin(btnNovoJogo, new Insets(0, 20, 0, 0));
-        BorderPane.setMargin(btnMenu, new Insets(0, 0, 0, 20));
+        rodape.setPadding(new Insets(10, 20, 10, 20));
 
         return rodape;
     }
@@ -396,6 +426,14 @@ public class OuriGameUI extends Application {
                 }
 
                 atualizarInterface();
+            }
+
+            if (mensagem.startsWith("ESTADO:")) {
+                String estado = mensagem.substring(7);
+
+                SaveManager.aplicarEstado(jogo, estado);
+                atualizarInterface();
+                atualizarFeedbackPadrao();
             }
         });
     }

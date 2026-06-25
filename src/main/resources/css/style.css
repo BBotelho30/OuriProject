@@ -444,3 +444,11 @@
 .house-button-pink:hover {
     -fx-background-color: rgba(232, 63, 152, 0.18);
 }
+
+.footer-button {
+    -fx-min-width: 180px;
+    -fx-pref-width: 190px;
+    -fx-padding: 14 18 14 18;
+    -fx-font-size: 15px;
+}
+
