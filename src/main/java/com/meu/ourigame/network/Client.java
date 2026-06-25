@@ -47,4 +47,13 @@ public class Client implements NetworkConnection {
     public void setOnMessage(Consumer<String> onMessage) {
         this.onMessage = onMessage;
     }
+
+    @Override
+    public void close() {
+        try {
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

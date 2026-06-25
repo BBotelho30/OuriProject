@@ -13,12 +13,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-import java.util.List;
-
 public class OuriGameUI extends Application {
+
+    private Stage stage;
 
     private JogoOuri jogo;
     private Button[][] botoesCasas;
@@ -33,10 +34,88 @@ public class OuriGameUI extends Application {
 
     @Override
     public void start(Stage stage) {
+        this.stage = stage;
+        mostrarMenuInicial();
+    }
+
+    private void mostrarMenuInicial() {
+        Label titulo = new Label("Jogo do Ouri");
+        titulo.setStyle("-fx-font-size: 34px; -fx-font-weight: bold;");
+
+        Label subtitulo = new Label("Escolhe o modo de jogo");
+        subtitulo.setStyle("-fx-font-size: 18px;");
+
+        Button btnLocal = new Button("Jogar Local");
+        btnLocal.setPrefWidth(260);
+        btnLocal.setOnAction(e -> iniciarJogoLocal());
+
+        Button btnServidor = new Button("Criar Servidor / Jogador 1");
+        btnServidor.setPrefWidth(260);
+        btnServidor.setOnAction(e -> iniciarServidor());
+
+        TextField txtIp = new TextField();
+        txtIp.setPromptText("IP do servidor");
+        txtIp.setMaxWidth(260);
+
+        Button btnCliente = new Button("Entrar como Cliente / Jogador 2");
+        btnCliente.setPrefWidth(260);
+        btnCliente.setOnAction(e -> {
+            String ip = txtIp.getText().trim();
+
+            if (ip.isEmpty()) {
+                mostrarMensagem("IP obrigatório", "Escreve o IP do servidor.");
+                return;
+            }
+
+            iniciarCliente(ip);
+        });
+
+        VBox menu = new VBox(15, titulo, subtitulo, btnLocal, btnServidor, txtIp, btnCliente);
+        menu.setAlignment(Pos.CENTER);
+        menu.setPadding(new Insets(30));
+
+        Scene scene = new Scene(menu, 850, 500);
+        stage.setTitle("Ouri - Menu Inicial");
+        stage.setScene(scene);
+        stage.setOnCloseRequest(event -> {
+            Platform.exit();
+            System.exit(0);
+        });
+        stage.show();
+    }
+
+    private void iniciarJogoLocal() {
+        modoRede = false;
+        jogadorLocal = -1;
+        connection = null;
+        mostrarJogo();
+    }
+
+    private void iniciarServidor() {
+        modoRede = true;
+        jogadorLocal = 0;
+
+        connection = new Server();
+        connection.setOnMessage(this::receberMensagem);
+        connection.start();
+
+        mostrarJogo();
+    }
+
+    private void iniciarCliente(String ipServidor) {
+        modoRede = true;
+        jogadorLocal = 1;
+
+        connection = new Client(ipServidor);
+        connection.setOnMessage(this::receberMensagem);
+        connection.start();
+
+        mostrarJogo();
+    }
+
+    private void mostrarJogo() {
         jogo = new JogoOuri();
         botoesCasas = new Button[2][Tabuleiro.NUM_CASAS];
-
-        configurarRede();
 
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(20));
@@ -63,38 +142,6 @@ public class OuriGameUI extends Application {
         stage.setTitle("Ouri");
         stage.setScene(scene);
         stage.show();
-    }
-
-    private void configurarRede() {
-        List<String> args = getParameters().getRaw();
-
-        if (args.isEmpty()) {
-            modoRede = false;
-            return;
-        }
-
-        String modo = args.get(0);
-
-        if (modo.equalsIgnoreCase("server")) {
-            modoRede = true;
-            jogadorLocal = 0;
-            connection = new Server();
-            connection.setOnMessage(this::receberMensagem);
-            connection.start();
-        } else if (modo.equalsIgnoreCase("client")) {
-            modoRede = true;
-            jogadorLocal = 1;
-
-            if (args.size() < 2) {
-                System.out.println("Falta o IP do servidor.");
-                return;
-            }
-
-            String ipServidor = args.get(1);
-            connection = new Client(ipServidor);
-            connection.setOnMessage(this::receberMensagem);
-            connection.start();
-        }
     }
 
     private GridPane criarTabuleiro() {
@@ -139,14 +186,13 @@ public class OuriGameUI extends Application {
         Button btn = new Button();
         btn.setPrefSize(85, 85);
         btn.setStyle("-fx-font-size: 22px; -fx-background-radius: 45;");
-
         btn.setOnAction(e -> jogarCasa(jogador, casa));
-
         return btn;
     }
 
     private HBox criarRodape() {
         Button btnNovoJogo = new Button("Novo Jogo");
+        Button btnMenu = new Button("Voltar ao Menu");
 
         btnNovoJogo.setOnAction(e -> {
             jogo = new JogoOuri();
@@ -157,7 +203,16 @@ public class OuriGameUI extends Application {
             }
         });
 
-        HBox rodape = new HBox(15, btnNovoJogo);
+        btnMenu.setOnAction(e -> {
+            if (modoRede && connection != null) {
+                connection.send("SAIR_MENU");
+            }
+
+            fecharLigacaoRede();
+            mostrarMenuInicial();
+        });
+
+        HBox rodape = new HBox(15, btnNovoJogo, btnMenu);
         rodape.setAlignment(Pos.CENTER);
         rodape.setPadding(new Insets(20));
 
@@ -213,6 +268,12 @@ public class OuriGameUI extends Application {
                 jogo = new JogoOuri();
                 atualizarInterface();
             }
+
+            if (mensagem.equals("SAIR_MENU")) {
+                mostrarMensagem("Ligação terminada", "O outro jogador voltou ao menu.");
+                fecharLigacaoRede();
+                mostrarMenuInicial();
+            }
         });
     }
 
@@ -251,5 +312,15 @@ public class OuriGameUI extends Application {
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
         alert.showAndWait();
+    }
+
+    private void fecharLigacaoRede() {
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
+
+        modoRede = false;
+        jogadorLocal = -1;
     }
 }

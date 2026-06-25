@@ -15,7 +15,9 @@ public class Server implements NetworkConnection {
     public void start() {
         new Thread(() -> {
             try {
-                serverSocket = new ServerSocket(5000);
+                serverSocket = new ServerSocket();
+                serverSocket.setReuseAddress(true);
+                serverSocket.bind(new InetSocketAddress(5000));
                 System.out.println("Servidor à espera na porta 5000...");
 
                 socket = serverSocket.accept();
@@ -45,5 +47,15 @@ public class Server implements NetworkConnection {
     @Override
     public void setOnMessage(Consumer<String> onMessage) {
         this.onMessage = onMessage;
+    }
+
+    @Override
+    public void close() {
+        try {
+            if (socket != null) socket.close();
+            if (serverSocket != null) serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
