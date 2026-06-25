@@ -2,7 +2,11 @@ package com.meu.ourigame;
 
 import com.meu.ourigame.model.JogoOuri;
 import com.meu.ourigame.model.Tabuleiro;
+import com.meu.ourigame.network.Client;
+import com.meu.ourigame.network.NetworkConnection;
+import com.meu.ourigame.network.Server;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,6 +16,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 public class OuriGameUI extends Application {
 
     private JogoOuri jogo;
@@ -19,11 +25,18 @@ public class OuriGameUI extends Application {
     private Label lblJogadorAtual;
     private Label lblDepositoJ1;
     private Label lblDepositoJ2;
+    private Label lblEstadoRede;
+
+    private NetworkConnection connection;
+    private boolean modoRede = false;
+    private int jogadorLocal = -1;
 
     @Override
     public void start(Stage stage) {
         jogo = new JogoOuri();
         botoesCasas = new Button[2][Tabuleiro.NUM_CASAS];
+
+        configurarRede();
 
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(20));
@@ -34,7 +47,10 @@ public class OuriGameUI extends Application {
         lblJogadorAtual = new Label();
         lblJogadorAtual.setStyle("-fx-font-size: 18px;");
 
-        VBox topo = new VBox(10, titulo, lblJogadorAtual);
+        lblEstadoRede = new Label();
+        lblEstadoRede.setStyle("-fx-font-size: 14px;");
+
+        VBox topo = new VBox(10, titulo, lblJogadorAtual, lblEstadoRede);
         topo.setAlignment(Pos.CENTER);
 
         root.setTop(topo);
@@ -47,6 +63,38 @@ public class OuriGameUI extends Application {
         stage.setTitle("Ouri");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void configurarRede() {
+        List<String> args = getParameters().getRaw();
+
+        if (args.isEmpty()) {
+            modoRede = false;
+            return;
+        }
+
+        String modo = args.get(0);
+
+        if (modo.equalsIgnoreCase("server")) {
+            modoRede = true;
+            jogadorLocal = 0;
+            connection = new Server();
+            connection.setOnMessage(this::receberMensagem);
+            connection.start();
+        } else if (modo.equalsIgnoreCase("client")) {
+            modoRede = true;
+            jogadorLocal = 1;
+
+            if (args.size() < 2) {
+                System.out.println("Falta o IP do servidor.");
+                return;
+            }
+
+            String ipServidor = args.get(1);
+            connection = new Client(ipServidor);
+            connection.setOnMessage(this::receberMensagem);
+            connection.start();
+        }
     }
 
     private GridPane criarTabuleiro() {
@@ -103,6 +151,10 @@ public class OuriGameUI extends Application {
         btnNovoJogo.setOnAction(e -> {
             jogo = new JogoOuri();
             atualizarInterface();
+
+            if (modoRede && connection != null) {
+                connection.send("NOVO");
+            }
         });
 
         HBox rodape = new HBox(15, btnNovoJogo);
@@ -113,6 +165,16 @@ public class OuriGameUI extends Application {
     }
 
     private void jogarCasa(int jogador, int casa) {
+        if (modoRede && jogador != jogadorLocal) {
+            mostrarMensagem("Jogada inválida", "Só podes jogar nas tuas casas.");
+            return;
+        }
+
+        if (modoRede && jogo.getJogadorAtual() != jogadorLocal) {
+            mostrarMensagem("Aguarda", "Ainda não é a tua vez.");
+            return;
+        }
+
         if (jogador != jogo.getJogadorAtual()) {
             mostrarMensagem("Jogada inválida", "Não é a vez desse jogador.");
             return;
@@ -127,6 +189,34 @@ public class OuriGameUI extends Application {
 
         atualizarInterface();
 
+        if (modoRede && connection != null) {
+            connection.send("JOGADA:" + casa);
+        }
+
+        verificarFimDeJogo();
+    }
+
+    private void receberMensagem(String mensagem) {
+        Platform.runLater(() -> {
+            if (mensagem.startsWith("JOGADA:")) {
+                int casa = Integer.parseInt(mensagem.substring(7));
+
+                boolean jogadaValida = jogo.jogar(casa);
+
+                if (jogadaValida) {
+                    atualizarInterface();
+                    verificarFimDeJogo();
+                }
+            }
+
+            if (mensagem.equals("NOVO")) {
+                jogo = new JogoOuri();
+                atualizarInterface();
+            }
+        });
+    }
+
+    private void verificarFimDeJogo() {
         if (jogo.isFimDeJogo()) {
             mostrarMensagem("Fim de jogo", jogo.getVencedor());
         }
@@ -145,6 +235,14 @@ public class OuriGameUI extends Application {
         lblDepositoJ2.setText(String.valueOf(tabuleiro.getDeposito(1)));
 
         lblJogadorAtual.setText("Vez do Jogador " + (jogo.getJogadorAtual() + 1));
+
+        if (!modoRede) {
+            lblEstadoRede.setText("Modo local");
+        } else if (jogadorLocal == 0) {
+            lblEstadoRede.setText("Modo rede: Servidor / Jogador 1");
+        } else {
+            lblEstadoRede.setText("Modo rede: Cliente / Jogador 2");
+        }
     }
 
     private void mostrarMensagem(String titulo, String mensagem) {
