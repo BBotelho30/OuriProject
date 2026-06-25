@@ -34,4 +34,5 @@ public class Tabuleiro {
   public void addAoDeposito(int jogador, int valor) {
     depositos[jogador] += valor;
   }
+  
 }
